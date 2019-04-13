@@ -48,6 +48,9 @@ func TestEval(t *testing.T) {
 
 	var r float64
 	for _, a := range testArgs {
+		if debug {
+			fmt.Println(a.Input)
+		}
 		if r, err = ParseAndEval(a.Input); err != nil {
 			t.Errorf("error evaluating expression: %s", err)
 		} else if r != a.Output {
@@ -56,16 +59,16 @@ func TestEval(t *testing.T) {
 	}
 }
 
-func BenchmarkExpression(b *testing.B) {
-	var err error
-	var ret float64
-	formula := "((1)) * 3.48315304084922 + (3.5) * 0.42707287702065 + (0.2) * 1.261487384549 + (math.Exp(1.4)) * 0.00132690681446317 + (3.5 * 0.2) * -0.202511439852321 + (3.5 * math.Exp(1.4)) * 0.000231099657391578"
-	b.Run("EvalBench", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			if ret, err = ParseAndEval(formula); err != nil {
-				fmt.Println(err)
-			}
-		}
-	})
-	fmt.Println(ret)
-}
+// func BenchmarkExpression(b *testing.B) {
+// 	var err error
+// 	var ret float64
+// 	formula := "((1)) * 3.48315304084922 + (3.5) * 0.42707287702065 + (0.2) * 1.261487384549 + (math.Exp(1.4)) * 0.00132690681446317 + (3.5 * 0.2) * -0.202511439852321 + (3.5 * math.Exp(1.4)) * 0.000231099657391578"
+// 	b.Run("EvalBench", func(b *testing.B) {
+// 		for i := 0; i < b.N; i++ {
+// 			if ret, err = ParseAndEval(formula); err != nil {
+// 				fmt.Println(err)
+// 			}
+// 		}
+// 	})
+// 	fmt.Println(ret)
+// }
