@@ -7,6 +7,7 @@ import (
 	"go/parser"
 	"go/token"
 	"math"
+	"reflect"
 	"strconv"
 )
 
@@ -28,6 +29,9 @@ func ErrWrap(err error) error {
 
 // Eval is used to evaluate mathematical expressions
 func Eval(exp ast.Expr) (float64, error) {
+	if debug {
+		fmt.Printf("%+v\n", exp)
+	}
 	switch exp := exp.(type) {
 	case *ast.BinaryExpr:
 		return EvalBinaryExpr(exp)
@@ -47,6 +51,9 @@ func Eval(exp ast.Expr) (float64, error) {
 			}
 			return i, nil
 		}
+	default:
+		fmt.Printf("case not handled for %v", reflect.TypeOf(exp))
+		return math.NaN(), ErrNotImplemented
 	}
 
 	return math.NaN(), ErrNotImplemented
@@ -98,20 +105,43 @@ func EvalCallExpr(exp *ast.CallExpr) (float64, error) {
 			return math.NaN(), ErrWrap(err)
 		}
 	}
-	L := e.Fun.(*ast.SelectorExpr)
-	l := *L
-	pkgName := l.X
-	funcName := l.Sel
-	f := fmt.Sprintf("%s.%s", pkgName, funcName)
-	switch f {
-	case "math.Log":
-		return math.Log(argMap[0]), nil
-	case "math.Exp":
-		return math.Exp(argMap[0]), nil
-	case "math.Abs":
-		return math.Abs(argMap[0]), nil
+	switch x := e.Fun.(type) {
+	case *ast.Ident:
+		if debug {
+			fmt.Printf("ident: %+v\n", e.Fun.(*ast.Ident))
+			fmt.Printf("%v\n", x)
+		}
+		f := e.Fun.(*ast.Ident)
+		// fmt.Printf("string %v\n", tmp.String())
+		// fmt.Printf("name %v\n", tmp.Name)
+		switch f.String() {
+		case "exp":
+			return math.Exp(argMap[0]), nil
+		default:
+			fmt.Printf("function `%s` not currently implemented", f.String())
+		}
+	case *ast.SelectorExpr:
+		if debug {
+			fmt.Printf("selector expr: %+v\n", e.Fun.(*ast.SelectorExpr))
+			fmt.Printf("%v\n", x)
+		}
+		L := e.Fun.(*ast.SelectorExpr)
+		l := *L
+		pkgName := l.X
+		funcName := l.Sel
+		f := fmt.Sprintf("%s.%s", pkgName, funcName)
+		switch f {
+		case "math.Log":
+			return math.Log(argMap[0]), nil
+		case "math.Exp":
+			return math.Exp(argMap[0]), nil
+		case "math.Abs":
+			return math.Abs(argMap[0]), nil
+		default:
+			fmt.Printf("function `%s` not currently implemented", f)
+		}
 	}
-	fmt.Printf("function `%s` not currently implemented", f)
+
 	return math.NaN(), ErrNotImplemented
 }
 
@@ -143,11 +173,16 @@ func ParseAndEval(formula string) (float64, error) {
 		fmt.Printf("error parsing formula %s:\n\t%s", formula, err.Error())
 		return math.NaN(), ErrParseFormula
 	}
-
+	if debug {
+		fmt.Println("ParseAndEval: check - 0")
+	}
 	var res float64
 	if res, err = Eval(exp); err != nil {
 		fmt.Printf("error evaluating ast from formula %s:\n\t%s", formula, err.Error())
 		return math.NaN(), ErrWrap(err)
+	}
+	if debug {
+		fmt.Println("ParseAndEval: check - 1")
 	}
 	return res, nil
 }

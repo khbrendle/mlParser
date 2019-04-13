@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+var debug = false
+
 // PROMPT console prompt to indicate accepting code
 const PROMPT = "go>> "
 
